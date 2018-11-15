@@ -1,0 +1,94 @@
+pragma solidity ^0.4.0;
+contract POP{
+    
+    function POP() public { owner = msg.sender; }
+    address owner;
+    address[] Quoters;
+    struct Asset {
+        uint id;
+        string name;
+        uint cost;
+        string choice;
+        address key;
+        address rented;
+        uint rentDays;
+        uint percost;
+        uint rentalCost;
+    }
+    
+    struct Quote{
+        uint assetId;
+        uint quote;
+        address quoterAddr;
+        string choice;
+    }
+        
+    Asset public a;
+    // the asset is public and visible to all
+    mapping (uint => Asset) assets;
+	
+	// Asset Creation
+    function newAsset(uint id, string name,uint cost,string choice,uint rentDays,uint percost){
+        if(msg.sender == owner){
+            a.id = id;
+            a.name = name;  
+            a.cost = cost;
+            a.choice = choice;
+            a.key = owner;
+            a.rentDays = rentDays;
+            a.percost = percost;
+        }
+    }
+    
+    mapping (address => Quote) public quoteValues;
+    
+	// The sell function sells the asset based on the choice of owner. 
+	// We are restricting other users from selling the asset by only allowing the owner of the asset to implement sell transaction
+	// This way we are rejecting the users who have taken the asset on rent from selling the asset
+    function sell(address Addr,uint rate,string choice) returns (string){
+        if(msg.sender == owner && (compareStrings(choice,"sell"))){
+          a.key = Addr;
+          a.cost = rate;
+          return "Transaction Done";
+        }
+        
+    }
+    
+	// The rent function rents the asset based on the choice of owner. 
+	// We are restricting other users from renting the asset by only allowing the owner of the asset to implement rent transaction
+	// This way we are rejecting the users who have rented the asset from renting the asset
+    function rent(address Addr,uint percost,uint rentDays,string choice) returns (string){
+        if(msg.sender == owner && (compareStrings(choice,"rent"))){
+            a.rented = Addr;
+            a.rentalCost = percost * rentDays;
+            return "Rented";
+        }
+    }
+    
+    //Hash function to compare Strings
+    function compareStrings (string a, string b) view returns (bool){
+       return keccak256(a) == keccak256(b);
+   }
+    
+    //This will get the list of addresses of the users who have quoted their interest
+    function getQuoters() view public returns(address[]){
+        if(msg.sender==owner){
+            return Quoters;
+        }
+    }
+    
+	//This function allows the users other than owner to enter their quotes to buy or rent the asset
+    function Quotes (uint id,uint quote,string choice){
+        if(msg.sender!=owner){
+            var quoteA = quoteValues[msg.sender];
+            quoteA.assetId = id;
+            quoteA.quote = quote;
+            quoteA.quoterAddr = msg.sender;
+            quoteA.choice = choice;
+            Quoters.push(msg.sender);
+        }
+          
+     
+    }
+
+}
